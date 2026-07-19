@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Notecast — turn your notes into audio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app-header hero">
+    <button id="home-btn" class="wordmark-btn" type="button">
+      <span class="wordmark">notecast</span>
+    </button>
+    <span class="tagline">your notes, transformed into audio and interactive quizzes</span>
+  </header>
+  
+
+  <main class="app-main">
+
+    <!-- STEP 1: Upload -->
+    <section id="upload-section" class="panel" data-state="active">
+      <div id="dropzone" class="dropzone">
+        <svg class="dropzone-icon" width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <path d="M20 6V26M20 6L13 13M20 6L27 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 26V30C8 31.1 8.9 32 10 32H30C31.1 32 32 31.1 32 30V26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="dropzone-title">Drop a file here, or <label for="file-input" class="dropzone-browse">browse</label></p>
+        <p class="dropzone-sub">PDF, Word, or PowerPoint</p>
+        <input id="file-input" type="file" accept=".pdf,.docx,.pptx,.txt,.md" hidden />
+      </div>
+      <p id="upload-error" class="error-text" hidden></p>
+    </section>
+
+    <!-- STEP 2: Extracting -->
+    <section id="extracting-section" class="panel" data-state="hidden">
+      <div class="status-block">
+        <div class="spinner" aria-hidden="true"></div>
+        <p class="status-text">Reading <span id="extracting-filename"></span>&hellip;</p>
+      </div>
+    </section>
+
+    <!-- STEP 3: Mode picker -->
+    <section id="mode-section" class="panel" data-state="hidden">
+      <button id="back-to-upload" class="back-btn" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        back
+      </button>
+
+      <div class="file-chip">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 2H9L13 6V13C13 13.55 12.55 14 12 14H4C3.45 14 3 13.55 3 13V3C3 2.45 3.45 2 4 2Z" stroke="currentColor" stroke-width="1.3"/></svg>
+        <span id="file-chip-name"></span>
+        <button id="change-file" class="link-btn" type="button">change</button>
+      </div>
+
+      <h2 class="section-title">How should this be read to you?</h2>
+
+      <div class="mode-tree" id="mode-tree">
+
+        <div class="mode-card" data-mode="discussion">
+          <button class="mode-trigger" type="button" data-target="panel-discussion">
+            <span class="mode-trigger-label">
+              <span class="mode-name">Discussion mode</span>
+              <span class="mode-desc">Two perspectives, talking it through</span>
+            </span>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M5 7L9 11L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="mode-panel" id="panel-discussion" hidden>
+            <div class="option-row" data-step="voiceCount">
+              <button class="option-btn" data-value="oneVoice" type="button">1 voice discussion</button>
+              <button class="option-btn" data-value="twoVoice" type="button">2 voice discussion</button>
+            </div>
+            <div class="option-row" data-step="depth" hidden>
+              <button class="option-btn" data-value="inDepth" type="button">In-depth</button>
+              <button class="option-btn" data-value="general" type="button">General</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-card" data-mode="story">
+          <button class="mode-trigger" type="button" data-target="panel-story">
+            <span class="mode-trigger-label">
+              <span class="mode-name">Storytelling mode</span>
+              <span class="mode-desc">Your notes, told as a narrative</span>
+            </span>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M5 7L9 11L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="mode-panel" id="panel-story" hidden>
+            <div class="option-row" data-step="storyType">
+              <button class="option-btn" data-value="bedtime" type="button">Bedtime story</button>
+              <button class="option-btn" data-value="drama" type="button">Drama</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-card mode-card-flat" data-mode="calm">
+          <button class="mode-trigger" type="button" data-immediate="calm">
+            <span class="mode-trigger-label">
+              <span class="mode-name">Calm mode</span>
+              <span class="mode-desc">One steady voice, no performance</span>
+            </span>
+            <svg class="chevron chevron-static" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M5 7L9 11L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <!-- QUIZ MODE CARD -->
+        <div class="mode-card" data-mode="quiz">
+          <button class="mode-trigger" type="button" data-target="panel-quiz">
+            <span class="mode-trigger-label">
+              <span class="mode-name">Quiz mode</span>
+              <span class="mode-desc">Test yourself with interactive questions</span>
+            </span>
+            <svg class="chevron" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M5 7L9 11L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="mode-panel" id="panel-quiz" hidden>
+            <div id="quiz-mode-loading" hidden>
+              <div class="spinner" aria-hidden="true"></div>
+              <p class="status-text">Analysing your notes for quiz modes…</p>
+            </div>
+            <div class="option-row" data-step="quizMode" id="quiz-mode-options"></div>
+
+            <div class="option-row" data-step="questionCount" id="quiz-count-options" hidden>
+              <button class="option-btn" data-value="10" type="button">10 questions</button>
+              <button class="option-btn" data-value="15" type="button">15 questions</button>
+              <button class="option-btn" data-value="30" type="button">30 questions</button>
+            </div>
+
+            <div class="option-row" data-step="timerChoice" id="quiz-timer-choice-options" hidden>
+              <button class="option-btn" data-value="none" type="button">No timer</button>
+              <button class="option-btn" data-value="timed" type="button">With timer</button>
+            </div>
+
+            <div class="option-row" data-step="timerType" id="quiz-timer-type-options" hidden>
+              <button class="option-btn" data-value="perQuestion" type="button">Per question</button>
+              <button class="option-btn" data-value="overall" type="button">Overall quiz</button>
+            </div>
+
+            <div class="option-row" data-step="perQuestionSeconds" id="quiz-per-question-options" hidden>
+              <button class="option-btn" data-value="3" type="button">3s</button>
+              <button class="option-btn" data-value="5" type="button">5s</button>
+              <button class="option-btn" data-value="10" type="button">10s</button>
+            </div>
+
+            <div class="quiz-overall-timer-picker" id="quiz-overall-timer-options" hidden>
+              <div class="option-row">
+                <button class="option-btn" data-value="5" type="button">5 min</button>
+                <button class="option-btn" data-value="10" type="button">10 min</button>
+                <button class="option-btn" data-value="15" type="button">15 min</button>
+                <button class="option-btn" data-value="20" type="button">20 min</button>
+                <button class="option-btn" data-value="30" type="button">30 min</button>
+              </div>
+              <div class="quiz-custom-timer-row">
+                <input type="number" id="quiz-custom-minutes" min="1" max="180" placeholder="Custom minutes" class="quiz-text-input" />
+                <button id="quiz-custom-minutes-btn" class="primary-btn" type="button">Set</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mode-confirm" id="mode-confirm" hidden>
+        <p class="mode-confirm-text" id="mode-confirm-text"></p>
+        <div class="mode-confirm-actions">
+          <button id="confirm-generate-btn" class="primary-btn" type="button">Generate</button>
+          <button id="confirm-change-btn" class="link-btn" type="button">choose differently</button>
+        </div>
+      </div>
+
+      <p id="mode-error" class="error-text" hidden></p>
+    </section>
+
+    <!-- STEP 4: Generating -->
+    <section id="generating-section" class="panel" data-state="hidden">
+      <div class="status-block">
+        <div class="spinner" aria-hidden="true"></div>
+        <p class="status-text" id="generating-text">Writing your script&hellip;</p>
+      </div>
+    </section>
+
+    <!-- STEP 5: Player -->
+    <section id="player-section" class="panel" data-state="hidden">
+      <button id="back-to-modes" class="back-btn" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        back
+      </button>
+
+      <div class="voice-picker" id="voice-picker"></div>
+      <p class="voice-picker-hint" id="voice-picker-hint" hidden>Voices are auto-matched by name — change any of them above if you'd like.</p>
+
+      <div class="player-card">
+        <div class="waveform" id="waveform" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="player-controls">
+          <button id="play-pause-btn" class="play-btn" type="button" aria-label="Play">
+            <svg id="play-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M6 4L16 10L6 16V4Z"/></svg>
+            <svg id="pause-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor" hidden><path d="M5 4H8V16H5V4ZM12 4H15V16H12V4Z"/></svg>
+          </button>
+          <span id="player-status" class="player-status">Ready</span>
+          <button id="restart-btn" class="link-btn" type="button">start over</button>
+        </div>
+      </div>
+
+      <div class="transcript" id="transcript"></div>
+    </section>
+
+    <!-- STEP 6: Quiz -->
+    <section id="quiz-section" class="panel" data-state="hidden">
+      <button id="back-to-modes-from-quiz" class="back-btn" type="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        back
+      </button>
+
+      <div id="quiz-container">
+        <div class="quiz-meta-row">
+          <div id="quiz-progress" class="quiz-progress"></div>
+          <div id="quiz-timer-display" class="quiz-timer-display" hidden></div>
+          <div id="quiz-score" class="quiz-score"></div>
+        </div>
+        <div id="quiz-question" class="quiz-question"></div>
+
+        <div id="quiz-answer-area" class="quiz-answer-area">
+          <!-- dynamically rendered based on question type -->
+        </div>
+
+        <div id="quiz-feedback" class="quiz-feedback" hidden></div>
+
+        <div id="quiz-controls" class="quiz-controls">
+          <button id="quiz-submit-btn" class="primary-btn" type="button">Submit</button>
+          <button id="quiz-next-btn" class="primary-btn" type="button" hidden>Next</button>
+          <button id="quiz-pause-btn" class="link-btn" type="button">Pause</button>
+          <button id="quiz-continue-btn" class="primary-btn" type="button" hidden>Continue</button>
+        </div>
+
+        <div id="quiz-summary" class="quiz-summary" hidden>
+          <h3 class="quiz-summary-title">Quiz complete!</h3>
+          <p id="quiz-final-score" class="quiz-final-score"></p>
+          <div id="quiz-strong-areas" class="quiz-strong-areas"></div>
+          <div id="quiz-weak-areas" class="quiz-weak-areas"></div>
+          <p id="quiz-suggestion" class="quiz-suggestion"></p>
+          <div class="quiz-summary-actions">
+            <button id="quiz-drill-btn" class="primary-btn" type="button">Drill weak areas</button>
+            <button id="quiz-switch-mode-btn" class="link-btn" type="button">Switch mode</button>
+            <button id="quiz-stop-btn" class="link-btn" type="button">Stop</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<div class="site-info">
+  <div class="site-info-inner">
+
+  <section class="info-section how-it-works">
+    <h2 class="info-title">How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M4 3H14L18 7V19C18 19.55 17.55 20 17 20H4C3.45 20 3 19.55 3 19V4C3 3.45 3.45 3 4 3Z" stroke="currentColor" stroke-width="1.4"/><path d="M14 3V7H18" stroke="currentColor" stroke-width="1.4"/></svg>
+        </div>
+        <h3 class="step-title">Upload your notes</h3>
+        <p class="step-desc">Drop in a PDF, Word doc, or PowerPoint — whatever you already have.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M4 11H18M4 6H14M4 16H10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="16" cy="16" r="2" stroke="currentColor" stroke-width="1.4"/></svg>
+        </div>
+        <h3 class="step-title"> Choose your mode — listen or quiz</h3>
+        <p class="step-desc">Hear your notes as a discussion, a story, or a calm voice. Or switch to quiz mode and test yourself with multiple‑choice, identification, or enumeration questions.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M4 12V10C4 6.13 7.13 3 11 3C14.87 3 18 6.13 18 10V12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><rect x="2" y="12" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="16" y="12" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/></svg>
+        </div>
+        <h3 class="step-title"> Listen, learn, and test yourself</h3>
+        <p class="step-desc">
+          Press play and let your notes be read to you — or dive into an interactive quiz that adapts to your answers, tracks your weak spots, and helps you truly learn. You can even turn the timer on for a challenge, or keep it off and go at your own pace.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="info-section about-section">
+  <h2 class="info-title">Why this exists</h2>
+  <div class="about-story">
+    <p>I built this out of a pretty specific kind of stress — running late for an exam, or staring at a page of notes that just won't sink in, wishing someone could simply explain it to me.</p>
+    <p>It's the same reason we all know song lyrics by heart without ever trying to memorize them — we just listen, over and over, and it sticks. I wanted my notes to work the same way: something I could listen to instead of re-reading for the tenth time.</p>
+    <p>But I also know that listening alone isn't always enough. The real learning happens when you test yourself — when you have to pull the answer out of your own head instead of just recognizing it. That's why Notecast now includes a full quiz engine: multiple‑choice, identification, and enumeration questions, all generated from your own notes, with or without a timer, giving you instant feedback and tracking your weak spots.</p>
+    <p>So whether you're commuting and just want to absorb, or sitting down for a focused study session, Notecast grows with you. One upload, two ways to learn.</p>
+    <p class="about-signoff">This is still early, and there's a lot more I want to add — thanks for trying it. More is coming.</p>
+  </div>
+</section>
+
+  <footer class="dev-footer">
+    <p class="dev-label">Built by</p>
+    <p class="dev-name">Jhames Gequinto</p>
+    <div class="dev-links">
+      <a href="mailto:jhamesgequinto@gmail.com" class="dev-link">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M1.5 3.5H13.5V11.5H1.5V3.5Z" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 3.5L7.5 8L13.5 3.5" stroke="currentColor" stroke-width="1.2"/></svg>
+        jhamesgequinto@gmail.com
+      </a>
+      <a href="https://github.com/jhames001" target="_blank" rel="noopener noreferrer" class="dev-link">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M7.5 1C3.9 1 1 3.9 1 7.5C1 10.4 2.9 12.8 5.5 13.6C5.8 13.7 5.9 13.5 5.9 13.3V12.1C4.1 12.5 3.7 11.2 3.7 11.2C3.4 10.5 3 10.3 3 10.3C2.5 9.9 3.1 9.9 3.1 9.9C3.6 10 3.9 10.5 3.9 10.5C4.4 11.3 5.2 11.1 5.5 10.9C5.5 10.6 5.7 10.4 5.8 10.2C4.3 10.1 2.8 9.5 2.8 6.9C2.8 6.2 3 5.6 3.4 5.2C3.3 5 3.1 4.2 3.5 3.2C3.5 3.2 4.1 3 5.5 3.9C6.1 3.7 6.8 3.6 7.5 3.6C8.2 3.6 8.9 3.7 9.5 3.9C10.9 3 11.5 3.2 11.5 3.2C11.9 4.2 11.7 5 11.6 5.2C12 5.6 12.2 6.2 12.2 6.9C12.2 9.5 10.7 10.1 9.2 10.2C9.4 10.4 9.6 10.8 9.6 11.4V13.3C9.6 13.5 9.7 13.7 10.1 13.6C12.6 12.8 14.5 10.4 14.5 7.5C14.5 3.9 11.6 1 7.5 1Z" fill="currentColor"/></svg>
+        jhames001
+      </a>
+    </div>
+    <p class="dev-support">Notecast is still growing — more features and enhancements are on the way.</p>
+  </footer>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
