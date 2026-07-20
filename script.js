@@ -4,7 +4,30 @@
 // ---------------------------------------------------------------------
 
 const SUPPORTED_EXTENSIONS = ["pdf", "docx", "pptx", "txt", "md"];
-const MAX_FILE_BYTES = 20 * 1024 * 1024; // matches api/extract.js cap
+// Vercel serverless functions have a hard 4.5MB request-body limit that
+// can't be raised. We send files as base64 inside JSON, which inflates
+// size by ~33%, so the real ceiling on the raw file is roughly 3.3MB.
+// 3MB leaves a safety margin for the JSON wrapper overhead.
+const MAX_FILE_BYTES = 3 * 1024 * 1024;
+
+// fetch().json() throws a cryptic "Unexpected token... is not valid JSON"
+// error whenever the server/platform returns plain text instead of JSON —
+// e.g. Vercel's raw "Request Entity Too Large" or "A server error has
+// occurred" pages for platform-level failures that never reach our own
+// code. This wraps that so those cases produce a readable message instead.
+async function parseJsonSafe(res) {
+  const raw = await res.text();
+  try {
+    return JSON.parse(raw);
+  } catch {
+    if (res.status === 413) {
+      throw new Error("That file is too large for the server to accept. Try a smaller file.");
+    }
+    throw new Error(
+      `The server sent back something unexpected (status ${res.status}). Please try again in a moment.`
+    );
+  }
+}
 
 const state = {
   filename: null,
@@ -150,7 +173,7 @@ async function handleFile(file) {
     return;
   }
   if (file.size > MAX_FILE_BYTES) {
-    showUploadError("That file is over 20MB. Try a smaller file for now.");
+    showUploadError("That file is over 3MB — the hosting platform caps uploads at that size. Try a smaller file, or export a version without large embedded images.");
     return;
   }
 
@@ -165,7 +188,7 @@ async function handleFile(file) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ filename: file.name, fileData: base64 }),
     });
-    const data = await res.json();
+    const data = await parseJsonSafe(res);
 
     if (!res.ok) {
       throw new Error(data.error || "Couldn't read that file.");
@@ -336,7 +359,7 @@ async function analyseNotesForQuiz() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: state.extractedText }),
     });
-    const data = await res.json();
+    const data = await parseJsonSafe(res);
     if (!res.ok) throw new Error(data.error || 'Analysis failed');
 
     const modes = data.modes || [];
@@ -527,7 +550,7 @@ async function generateScript() {
         ...state.selection,
       }),
     });
-    const data = await res.json();
+    const data = await parseJsonSafe(res);
 
     if (!res.ok) {
       throw new Error(data.error || "Couldn't generate a script for that.");
@@ -565,7 +588,7 @@ async function generateQuiz() {
         questionCount: state.selection.questionCount || 10,
       }),
     });
-    const data = await res.json();
+    const data = await parseJsonSafe(res);
     if (!res.ok) throw new Error(data.error || 'Could not generate quiz.');
 
     state.quiz.questions = data.questions;

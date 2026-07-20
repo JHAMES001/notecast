@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "Shared backend (extraction + mode-aware script generation) for the PDF/Word/PPTX-to-audio app",
   "main": "index.js",
-  "scripts": {
-    "dev": "vercel dev"
-  },
   "license": "ISC",
   "dependencies": {
     "jszip": "^3.10.1",

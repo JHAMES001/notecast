@@ -19,9 +19,14 @@ module.exports = async (req, res) => {
     }
 
     const buffer = Buffer.from(fileData, "base64");
-    const MAX_BYTES = 20 * 1024 * 1024; // 20MB safety cap
+    // Vercel serverless functions have a hard, non-configurable 4.5MB
+    // request-body limit. Files arrive here as base64 (already ~33%
+    // larger than raw), so if we're even executing this code the request
+    // got through — but we still enforce a matching raw-file cap as a
+    // defense-in-depth check against the client-side one being bypassed.
+    const MAX_BYTES = 3 * 1024 * 1024;
     if (buffer.length > MAX_BYTES) {
-      res.status(413).json({ error: "File too large (20MB max)" });
+      res.status(413).json({ error: "File too large (3MB max — Vercel's platform limit)" });
       return;
     }
 
