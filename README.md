@@ -36,7 +36,7 @@ cp .env.example .env
 # Add your API_KEY to .env
 vercel dev
 
-## Project Structure
+Project Structure
 
 notecast-backend/
 ├── index.html          # App UI
@@ -51,7 +51,7 @@ notecast-backend/
     ├── extractText.js
     └── modePrompts.js
 
-## Known Limitations
+Known Limitations
 Uses browser's Web Speech API (voices are OS/browser dependent)
 
 20MB file size limit
@@ -60,6 +60,6 @@ Uses browser's Web Speech API (voices are OS/browser dependent)
 
 No OCR for scanned PDFs/images
 
-## License
+License
 MIT © Jhames Gequinto
 
